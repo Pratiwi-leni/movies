@@ -17,6 +17,7 @@ let reviews = [
     comment: "Film animasi terbaik sepanjang masa!"
   }
 ];
+let nextId = 2;
 
 // Endpoint GET /status
 app.get("/status", (req, res) => {
@@ -39,7 +40,7 @@ app.get("/reviews/:id", (req, res) => {
 
 //Endpoint POST /reviews
 app.post("/reviews", (req, res) => {
-  const { filmId, user, rating, comment } = req.body;
+  const { filmId, user, rating, comment } = req.body || {};
 
   // Validasi input
   if (!filmId || !user || !rating || !comment) {
