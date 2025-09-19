@@ -1,94 +1,133 @@
-const express = require("express");
-const cors = require("cors");
-
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { dbMovies, dbDirectors } = require('./database.js');
 const app = express();
-const PORT = 3300;
-
+const port = process.env.PORT || 3100;
 app.use(cors());
+
 app.use(express.json());
 
-// Basis data sementara ulasan
-let reviews = [
-  {
-    id: 1,
-    filmId: "2baf70d1-42bb-4437-b551-e5fed5a87abe", // Spirited Away
-    user: "Andi",
-    rating: 5,
-    comment: "Film animasi terbaik sepanjang masa!"
+// STATUS
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Server is running',
+    timestamp: new Date()
+  });
+});
+
+// GET semua movies
+app.get('/movies', (req, res) => {
+  const sql = "SELECT * FROM movies ORDER BY id ASC";
+  dbMovies.all(sql, [], (err, rows) => {
+    if (err) return res.status(400).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// GET movie by id
+app.get('/movies/:id', (req, res) => {
+  const sql = "SELECT * FROM movies WHERE id = ?";
+  dbMovies.get(sql, [req.params.id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Movie not found" });
+    res.json(row);
+  });
+});
+
+// POST movie baru
+app.post('/movies', (req, res) => {
+  const { title, director, year } = req.body;
+  if (!title || !director || !year) {
+    return res.status(400).json({ error: "title, director, year is required" });
   }
-];
-let nextId = 2;
-
-// Endpoint GET /status
-app.get("/status", (req, res) => {
-  res.json({ status: "API is running", time: new Date() });
+  const sql = 'INSERT INTO movies (title, director, year) VALUES (?,?,?)';
+  dbMovies.run(sql, [title, director, year], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.status(201).json({ id: this.lastID, title, director, year });
+  });
 });
 
-// Endpoint GET /reviews
-app.get("/reviews", (req, res) => {
-  res.json(reviews);
+// Update movies
+app.put("/movies/:id", (req, res) => {
+  const { title, director, year } = req.body;
+  dbMovies.run(
+    "UPDATE movies SET title = ?, director = ?, year = ? WHERE id = ?",
+    [title, director, year, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ updated: this.changes });
+    }
+  );
 });
 
-// Endpoint GET /reviews/:id
-app.get("/reviews/:id", (req, res) => {
-  const review = reviews.find(r => r.id === parseInt(req.params.id));
-  if (!review) {
-    return res.status(404).json({ error: "Review tidak ditemukan" });
-  }
-  res.json(review);
+// DELETE movies
+app.delete("/movies/:id", (req, res) => {
+  dbMovies.run("DELETE FROM movies WHERE id = ?", req.params.id, function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: this.changes });
+  });
 });
 
-//Endpoint POST /reviews
-app.post("/reviews", (req, res) => {
-  const { filmId, user, rating, comment } = req.body || {};
-
-  // Validasi input
-  if (!filmId || !user || !rating || !comment) {
-    return res.status(400).json({ error: "Semua field wajib diisi" });
-  }
-
-  const newReview = {
-    id: nextId++,
-    filmId,
-    user,
-    rating,
-    comment
-  };
-
-  reviews.push(newReview);
-  res.status(201).json(newReview);
+// GET semua director
+app.get("/directors", (req, res) => {
+  dbDirectors.all("SELECT * FROM directors", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 });
 
-// Endpoint PUT /reviews/:id
-app.put("/reviews/:id", (req, res) => {
-  const review = reviews.find(r => r.id === parseInt(req.params.id));
-  if (!review) {
-    return res.status(404).json({ error: "Review tidak ditemukan" });
-  }
-
-  const { filmId, user, rating, comment } = req.body;
-
-  // Update data jika ada
-  if (filmId) review.filmId = filmId;
-  if (user) review.user = user;
-  if (rating) review.rating = rating;
-  if (comment) review.comment = comment;
-
-  res.json(review);
+// GET director by id
+app.get("/directors/:id", (req, res) => {
+  dbDirectors.get("SELECT * FROM directors WHERE id = ?", [req.params.id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Director not found" });
+    res.json(row);
+  });
 });
 
-// Endpoint DELETE /reviews/:id
-app.delete("/reviews/:id", (req, res) => {
-  const reviewIndex = reviews.findIndex(r => r.id === parseInt(req.params.id));
-  if (reviewIndex === -1) {
-    return res.status(404).json({ error: "Review tidak ditemukan" });
-  }
-
-  const deleted = reviews.splice(reviewIndex, 1);
-  res.json({ message: "Review berhasil dihapus", data: deleted[0] });
+// CREATE sutradara
+app.post("/directors", (req, res) => {
+  const { name, birthYear } = req.body;
+  dbDirectors.run(
+    "INSERT INTO directors (name, birthYear) VALUES (?, ?)",
+    [name, birthYear],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, name, birthYear });
+    }
+  );
 });
 
-// Menjalankan server
-app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
+// UPDATE sutradara
+app.put("/directors/:id", (req, res) => {
+  const { name, birthYear } = req.body;
+  dbDirectors.run(
+    "UPDATE directors SET name = ?, birthYear = ? WHERE id = ?",
+    [name, birthYear, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ updated: this.changes });
+    }
+  );
 });
+
+// DELETE sutradara
+app.delete("/directors/:id", (req, res) => {
+  dbDirectors.run("DELETE FROM directors WHERE id = ?", req.params.id, function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: this.changes });
+  });
+});
+
+// handle 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// information server listening
+app.listen(port, () => {
+  console.log('Server Running on localhost:${port}');
+});
+
