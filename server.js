@@ -186,10 +186,10 @@ app.get('/movies/:id', async (req, res, next) => {
     }
 });
 
-app.post('/directors', authenticateToken, async (req, res, next) => {
-    const { name, birthYear} = req.body;
-    if (!name || !birthYear ) {
-        return res.status(400).json({ error: 'name, birthYear wajib diisi' });
+app.post('/director', authenticateToken, async (req, res, next) => {
+    const { name, birthYear } = req.body;
+    if (!name || !birthYear) {
+        return res.status(400).json({ error: 'Semua field harus diisi' });
     }
     const sql = 'INSERT INTO directors (name, birthYear) VALUES ($1, $2) RETURNING *';
     try {
@@ -198,7 +198,7 @@ app.post('/directors', authenticateToken, async (req, res, next) => {
     } catch (err) {
         next(err);
     }
-});
+})
 
 app.put('/movies/:id', [authenticateToken, authorizeRole('admin')], async (req, res, next) => {
     const { title, director_id, year } = req.body;
