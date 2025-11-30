@@ -1,18 +1,15 @@
-# LAPORAN PRAKTIKUM MDIRECTORS
+# HASIL PRAKTIKUM E-Canteen
 
-1. langkah pertama buat file bernama database dan tambahkan kode untuk membuat tabel directors untuk kodenya seperti gambar di bawah ini
-![image](images/2.png)
-File database.js ini merupakan modul konfigurasi database untuk aplikasi Node.js yang menggunakan SQLite sebagai sistem manajemen database
-
-
-2. buat file yang bernama env dimana  file ini untuk aplikasi web manajemen film dan sutradara kemudian untuk isinya  isikan kode seperti gambar di bawah ini 
-![image](images/1.png)
-
-3. kemudian masuk pada file server.js yang berfungsi untuk mengolah data movies dan director untuk kodenya pada gambar berikut ini 
-![images](images/31.png)
-![images](images/32.png)
-![images](images/33.png)
-
-
+1. ![images](images/41.png)
+2. ![images](images/42.png)
+3. ![images](images/43.png)
+4. ![images](images/44.png)
+5. ![images](images/45.png)
+6. ![images](images/46.png)
+7. ![images](images/47.png)
+8. ![images](images/48.png)
+9. ![images](images/49.png)
+10. ![images](images/411.png)
+11. ![images](images/422.png)
 
 
